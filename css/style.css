@@ -341,6 +341,10 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--blu); width: 1
 /* ---------- Stampa ---------- */
 .print-area { display: none; }
 @media print {
+  html, body { height: auto !important; overflow: visible !important; }
+  #print-area[hidden] { display: none !important; }
+}
+@media print {
   body { overflow: visible; background: #fff; }
   .app { display: none !important; }
   .print-area { display: block !important; font-family: var(--font); color: #111; padding: 0; }

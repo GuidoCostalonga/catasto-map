@@ -238,7 +238,6 @@
   </div>
 
   <div id="toasts" class="toasts" aria-live="polite"></div>
-  <div id="print-area" class="print-area" hidden></div>
 
   <!-- ============ BARRA MOBILE ============ -->
   <nav class="mobile-bar only-mobile" aria-label="Navigazione mobile">
@@ -249,6 +248,9 @@
     <button id="mb-scheda">📄<span>Scheda</span></button>
   </nav>
 </div>
+
+<!-- zona di stampa: fuori da #app, che in stampa viene nascosto -->
+<div id="print-area" class="print-area" hidden aria-hidden="true"></div>
 
 <script src="js/config.js"></script>
 <script src="vendor/ol/ol.js"></script>

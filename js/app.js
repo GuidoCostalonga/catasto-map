@@ -700,7 +700,10 @@ class App {
       mapDataUrl: img, rows,
       note: 'Cartografia: Agenzia delle Entrate – Geoportale Cartografico Catastale (CC BY 4.0); base: © OpenStreetMap contributors. Documento privo di valore legale: per usi ufficiali richiedere visura/estratto di mappa. Per salvare in PDF scegliere "Salva come PDF" nella finestra di stampa.'
     });
-    setTimeout(() => { window.print(); setTimeout(() => { ui.el.printArea.hidden = true; }, 500); }, 100);
+    const done = () => { ui.el.printArea.hidden = true; window.removeEventListener('afterprint', done); };
+    window.addEventListener('afterprint', done);
+    setTimeout(() => window.print(), 150);
+    setTimeout(done, 120000); // ripiego se il browser non emette afterprint
   }
 
   /* ================= amministrazione / servizi ================= */
