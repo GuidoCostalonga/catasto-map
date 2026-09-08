@@ -517,7 +517,6 @@ export class MapController extends EventTarget {
       const compose = () => {
         if (done) return;
         done = true;
-        clearTimeout(fallback);
         try {
           const size = this.map.getSize();
           const canvas = document.createElement('canvas');
@@ -539,10 +538,10 @@ export class MapController extends EventTarget {
           resolve(canvas.toDataURL('image/png'));
         } catch (err) { reject(err); }
       };
-      // se qualche tile non arriva mai, dopo 6 s si esporta comunque ciò che è disegnato
-      const fallback = setTimeout(compose, 6000);
-      this.map.once('rendercomplete', compose);
+      // Si cattura subito ciò che è già disegnato a schermo: aspettare il caricamento di tutte le tile
+      // (evento rendercomplete) poteva richiedere decine di secondi con il server AdE lento.
       this.map.renderSync();
+      requestAnimationFrame(compose);
     });
   }
 
