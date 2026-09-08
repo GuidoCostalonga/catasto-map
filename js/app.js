@@ -252,17 +252,45 @@ class App {
     this.refreshOwnershipBlock();
     this.pushHistory(p, point);
     this.updateUrl(p);
-    // indirizzo e confine comunale in background
-    if (!address && point) this.reverseForPanel(point);
+    // indirizzo, quota e confine comunale in background
+    const refPoint = point || (p.bbox ? core.bboxCenter(p.bbox) : null);
+    if (refPoint) {
+      this.reverseForPanel(refPoint, p, !address);
+      this.elevationForPanel(refPoint, p);
+    } else {
+      ui.updateRow('indirizzo', 'non disponibile', { muted: true });
+      ui.updateRow('quota', 'non disponibile', { muted: true });
+    }
     this.showComuneBoundary(p);
   }
 
-  async reverseForPanel(point) {
+  /** Indirizzo del punto (reverse geocoding OSM): riga della scheda e, se non c'è un indirizzo cercato, blocco INDIRIZZO. */
+  async reverseForPanel(point, parcel, alsoBlock) {
     try {
       const r = await this.geocoder.reverse(point[0], point[1]);
-      if (this.state.selectedPoint !== point) return;
-      if (r.street || r.city) this.ui.renderAddress({ main: r.street || r.city, sub: [r.postcode, r.city, r.county && `(${r.county})`].filter(Boolean).join(' ') });
-    } catch (_) { /* facoltativo */ }
+      if (this.state.selected !== parcel) return;
+      const main = r.street || r.city;
+      const sub = [r.postcode, r.city, r.county && `(${r.county})`].filter(Boolean).join(' ');
+      if (!main) { this.ui.updateRow('indirizzo', 'nessun indirizzo OSM nelle vicinanze', { muted: true }); return; }
+      this.ui.updateRow('indirizzo', `${main}${sub ? ', ' + sub : ''}`);
+      if (alsoBlock) this.ui.renderAddress({ main, sub });
+    } catch (_) {
+      if (this.state.selected === parcel) this.ui.updateRow('indirizzo', 'geocoder non disponibile', { muted: true });
+    }
+  }
+
+  /** Quota del punto (Open-Meteo Elevation, dati Copernicus DEM 90 m): indicativa. */
+  async elevationForPanel(point, parcel) {
+    try {
+      const url = `${CONFIG.ELEVATION_URL}?latitude=${point[1].toFixed(5)}&longitude=${point[0].toFixed(5)}`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      const j = await res.json();
+      const q = j && Array.isArray(j.elevation) ? j.elevation[0] : null;
+      if (this.state.selected !== parcel) return;
+      this.ui.updateRow('quota', q === null || q === undefined ? 'non disponibile' : `${Math.round(q)} m ≈ (DEM 90 m)`, { muted: q === null });
+    } catch (_) {
+      if (this.state.selected === parcel) this.ui.updateRow('quota', 'non disponibile', { muted: true });
+    }
   }
 
   async showComuneBoundary(p) {
@@ -550,7 +578,7 @@ class App {
     $('btn-close-right').addEventListener('click', () => ui.closeRightPanel());
     $('pa-copy').addEventListener('click', () => {
       const p = this.state.selected; if (!p) return;
-      const txt = [`Comune: ${p.comune} (${p.codiceComune})${p.provincia ? ' - ' + p.provincia : ''}`, p.sezione ? `Sezione: ${p.sezione}` : null, `Foglio: ${p.foglioLabel}`, `Particella: ${p.particella}`, p.subalterno ? `Subalterno: ${p.subalterno}` : null, this.state.selectedPoint ? `Coordinate: ${fmtCoord(this.state.selectedPoint[0], this.state.selectedPoint[1])}` : null, this.state.info && this.state.info.superficieGeometrica ? `Superficie geometrica: ${fmtArea(this.state.info.superficieGeometrica)}` : null, `Riferimento: ${p.ref}`].filter(Boolean).join('\n');
+      const txt = [`Comune: ${p.comune} (${p.codiceComune})${p.provincia ? ' - ' + p.provincia : ''}`, p.sezione ? `Sezione: ${p.sezione}` : null, `Foglio: ${p.foglioLabel}`, `Particella: ${p.particella}`, p.subalterno ? `Subalterno: ${p.subalterno}` : null, this.rowText('indirizzo') ? `Indirizzo (OSM): ${this.rowText('indirizzo')}` : null, this.state.selectedPoint ? `Coordinate: ${fmtCoord(this.state.selectedPoint[0], this.state.selectedPoint[1])}` : null, this.rowText('quota') ? `Quota: ${this.rowText('quota')}` : null, this.state.info && this.state.info.superficieGeometrica ? `Superficie geometrica: ${fmtArea(this.state.info.superficieGeometrica)}` : null, `Riferimento: ${p.ref}`].filter(Boolean).join('\n');
       this.copy(txt, 'Dati catastali copiati');
     });
     $('pa-copy-coords').addEventListener('click', () => { const pt = this.pointForSelected(); if (pt) this.copy(fmtCoord(pt[0], pt[1]), 'Coordinate copiate'); });
@@ -558,7 +586,17 @@ class App {
     $('pa-center').addEventListener('click', () => { if (!this.map.centerSelection()) { const pt = this.pointForSelected(); if (pt) this.map.flyTo(pt[0], pt[1], 18.5); } });
     $('pa-pdf').addEventListener('click', () => this.print(true));
     $('pa-visura').addEventListener('click', () => this.requestVisura());
+    const L = CONFIG.ADE_LINKS || {};
+    $('ade-rendite').href = L.renditeServizio || L.rendite || '#';
+    $('ade-visura').href = L.visura || '#';
+    $('ade-miei').href = L.mieiImmobili || '#';
     ui.el.ownershipForm.addEventListener('submit', (e) => { e.preventDefault(); this.consultOwnership($('o-motivo').value.trim(), $('o-sub').value.trim()); });
+  }
+
+  /** Testo di una riga della scheda compilata da fonti aperte (vuoto se non disponibile). */
+  rowText(id) {
+    const dd = this.ui.el.kv.querySelector(`dd[data-row="${id}"]`);
+    return dd && !dd.classList.contains('muted') ? dd.textContent : '';
   }
 
   pointForSelected() {
@@ -652,7 +690,7 @@ class App {
     const pt = this.pointForSelected();
     const rows = withData && p ? [
       ['Comune', `${p.comune} (${p.codiceComune})${p.provincia ? ' — ' + p.provincia : ''}`], ['Sezione', p.sezione || '—'], ['Foglio', p.foglioLabel], ['Particella', p.particella],
-      ['Subalterno', p.subalterno || '—'], ['Riferimento nazionale', p.ref], ['Coordinate (WGS84)', pt ? fmtCoord(pt[0], pt[1]) : '—'],
+      ['Subalterno', p.subalterno || '—'], ['Riferimento nazionale', p.ref], ['Indirizzo (OpenStreetMap)', this.rowText('indirizzo') || '—'], ['Coordinate (WGS84)', pt ? fmtCoord(pt[0], pt[1]) : '—'], ['Quota s.l.m.', this.rowText('quota') || '—'],
       ['Superficie geometrica', this.state.info && this.state.info.superficieGeometrica ? fmtArea(this.state.info.superficieGeometrica) + ' (indicativa)' : '—'],
       ['Link', this.parcelUrl(p)]
     ] : [];

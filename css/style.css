@@ -304,6 +304,9 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--blu); width: 1
 .ownership-result table { width: 100%; border-collapse: collapse; margin-top: 8px; }
 .ownership-result th, .ownership-result td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--grigio-200); }
 .ownership-result th { font-size: 11px; letter-spacing: 0.05em; color: var(--grigio-500); }
+.ade-links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.ade-links .hint { flex-basis: 100%; margin: 0 0 4px; }
+.ade-links a.btn { text-decoration: none; }
 .demo-banner { background: #fef3c7; color: #92400e; border: 2px dashed #f59e0b; border-radius: 8px; padding: 8px 10px; font-weight: 800; text-align: center; letter-spacing: 0.05em; margin-bottom: 8px; }
 .source-note { font-size: 11px; color: var(--grigio-500); line-height: 1.45; margin: 0; }
 

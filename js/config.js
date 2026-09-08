@@ -49,6 +49,15 @@ window.CATASTO_CONFIG = {
   GEOCODER_SUGGEST_URL: 'https://photon.komoot.io/api/',
   GEOCODER_COUNTRY: 'it',
   GEOCODER_BBOX: [6.6, 35.4, 18.6, 47.2],
+  // Quota del punto selezionato (Open-Meteo Elevation API, gratuita per uso non commerciale, CORS aperto). '' per disattivare.
+  ELEVATION_URL: 'https://api.open-meteo.com/v1/elevation',
+  // Pagine ufficiali dell'Agenzia delle Entrate per completare a mano i dati che i servizi cartografici non espongono
+  ADE_LINKS: {
+    rendite: 'https://www.agenziaentrate.gov.it/portale/schede/fabbricatiterreni/visura-catastale/consultazione-rendite-catastali-cittadini',
+    renditeServizio: 'https://sister3.agenziaentrate.gov.it/CitizenVisure/index.do',
+    visura: 'https://www.agenziaentrate.gov.it/portale/schede/fabbricatiterreni/visura-catastale/visura-catastale-online-cittadini',
+    mieiImmobili: 'https://www.agenziaentrate.gov.it/portale/consulta-i-dati-dei-tuoi-immobili'
+  },
 
   // ---- Basemap (liberamente utilizzabili con attribuzione) ----
   BASEMAPS: [

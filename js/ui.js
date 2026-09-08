@@ -182,25 +182,36 @@ export class UI {
     const p = parcel;
     this.el.headline.innerHTML = `<div class="hl"><span>FOGLIO</span><b>${esc(p.foglioLabel)}</b></div><div class="hl accent"><span>PARTICELLA</span><b>${esc(p.particella)}</b></div>`;
     const rows = [
-      ['Comune', p.comune], ['Codice catastale', p.codiceComune], ['Provincia', p.provincia ? `${p.provincia} (${p.sigla})` : null], ['Regione', p.regione || null],
+      ['Comune', p.comune], ['Codice catastale', p.codiceComune], ['Codice ISTAT', p.istat || null], ['CAP', p.cap || null],
+      ['Provincia', p.provincia ? `${p.provincia} (${p.sigla})` : null], ['Regione', p.regione || null],
       ['Sezione', p.sezione || '—'], ['Foglio', p.foglioLabel + (p.allegato ? ` (allegato ${p.allegato})` : '') + (p.sviluppo ? ` (sviluppo ${p.sviluppo})` : '')],
       ['Particella', p.particella], ['Subalterno', p.subalterno || { muted: 'non pertinente / non indicato' }],
       ['Riferimento nazionale', { mono: p.ref }],
+      ['Indirizzo (OpenStreetMap)', { muted: 'ricerca in corso…', id: 'indirizzo' }],
       ['Coordinate punto', point ? { mono: fmtCoord(point[0], point[1]) } : { muted: 'centroide particella' }],
+      ['Quota s.l.m.', { muted: 'ricerca in corso…', id: 'quota' }],
       ['Superficie (geometrica)', info && info.superficieGeometrica ? fmtArea(info.superficieGeometrica) + ' ≈' : { muted: 'non disponibile (geometria assente)' }],
-      ['Superficie catastale', { muted: 'non disponibile nel servizio pubblico' }],
-      ['Qualità catastale', { muted: 'non disponibile nel servizio pubblico' }],
-      ['Classe', { muted: 'non disponibile nel servizio pubblico' }],
-      ['Reddito dominicale', { muted: 'richiede visura' }],
-      ['Reddito agrario', { muted: 'richiede visura' }]
+      ['Superficie catastale', { muted: 'solo in visura AdE' }],
+      ['Qualità catastale', { muted: 'solo in visura AdE' }],
+      ['Classe', { muted: 'solo in visura AdE' }],
+      ['Reddito dominicale', { muted: 'solo in visura AdE' }],
+      ['Reddito agrario', { muted: 'solo in visura AdE' }]
     ];
     this.el.kv.innerHTML = rows.filter(([, v]) => v !== null && v !== undefined).map(([k, v]) => {
+      const id = typeof v === 'object' && v.id ? ` data-row="${v.id}"` : '';
       if (typeof v === 'object') {
-        if (v.muted) return `<dt>${esc(k)}</dt><dd class="muted">${esc(v.muted)}</dd>`;
-        if (v.mono) return `<dt>${esc(k)}</dt><dd class="mono">${esc(v.mono)}</dd>`;
+        if (v.muted) return `<dt>${esc(k)}</dt><dd class="muted"${id}>${esc(v.muted)}</dd>`;
+        if (v.mono) return `<dt>${esc(k)}</dt><dd class="mono"${id}>${esc(v.mono)}</dd>`;
       }
-      return `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`;
+      return `<dt>${esc(k)}</dt><dd${id}>${esc(v)}</dd>`;
     }).join('');
+  }
+  /** Aggiorna una riga della scheda popolata in un secondo momento (indirizzo, quota…). */
+  updateRow(id, value, { muted = false, mono = false } = {}) {
+    const dd = this.el.kv.querySelector(`dd[data-row="${id}"]`);
+    if (!dd) return;
+    dd.className = muted ? 'muted' : (mono ? 'mono' : '');
+    dd.textContent = value;
   }
   renderOwnership({ message, showForm, result, demo }) {
     this.el.ownershipMsg.textContent = message || '';

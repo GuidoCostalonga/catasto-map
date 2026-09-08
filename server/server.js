@@ -36,7 +36,7 @@ app.disable('x-powered-by');
 if (config.behindProxy) app.set('trust proxy', 1);
 
 /* ---------------- sicurezza: intestazioni ---------------- */
-const connectSrc = ["'self'", 'https://nominatim.openstreetmap.org', 'https://photon.komoot.io', ...config.corsOrigins];
+const connectSrc = ["'self'", 'https://nominatim.openstreetmap.org', 'https://photon.komoot.io', 'https://api.open-meteo.com', ...config.corsOrigins];
 app.use(helmet({
   contentSecurityPolicy: {
     useDefaults: true,

@@ -42,7 +42,7 @@ export class ComuniIndex {
     const res = await fetch(this.url);
     if (!res.ok) throw new Error('Impossibile caricare l\'elenco dei Comuni');
     const json = await res.json();
-    this.list = json.comuni.map((r) => ({ nome: r[0], codice: r[1], sigla: r[2], provincia: r[3], regione: r[4], istat: r[5], key: core.normalizeName(r[0]) }));
+    this.list = json.comuni.map((r) => ({ nome: r[0], codice: r[1], sigla: r[2], provincia: r[3], regione: r[4], istat: r[5], cap: r[6] || '', key: core.normalizeName(r[0]) }));
     for (const c of this.list) this.byCode.set(c.codice, c);
     this.list.sort((a, b) => a.nome.localeCompare(b.nome, 'it'));
     return this.list.length;
@@ -215,6 +215,7 @@ export class AgenziaEntrateMapProvider extends CadastralProvider {
     return {
       ref: p.ref, codiceComune: p.codiceComune, comune: comune ? comune.nome : p.codiceComune,
       provincia: comune ? comune.provincia : '', sigla: comune ? comune.sigla : '', regione: comune ? comune.regione : '',
+      istat: comune ? comune.istat : '', cap: comune ? comune.cap : '',
       sezione: p.sezione, foglio: p.foglio, foglioLabel: p.foglioLabel, allegato: p.allegato, sviluppo: p.sviluppo,
       particella: p.particella, foglioRef: p.foglioRef,
       geometry, bbox: feature ? feature.bbox : null,
