@@ -2,7 +2,7 @@
  * service-worker.js — PWA: cache dell'app shell, rete per API/servizi OGC, cache limitata delle tile di base.
  * Aggiornare CACHE_VERSION a ogni rilascio per invalidare le risorse statiche.
  */
-const CACHE_VERSION = 'catasto-map-v1.0.1';
+const CACHE_VERSION = 'catasto-map-v1.0.2';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const TILE_CACHE = `${CACHE_VERSION}-tiles`;
 const TILE_MAX_ENTRIES = 400;
@@ -15,7 +15,13 @@ const SHELL = [
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(SHELL_CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  // cache: 'reload' salta la cache HTTP del browser (GitHub Pages invia max-age=600):
+  // altrimenti una nuova versione del service worker potrebbe precaricare file vecchi.
+  event.waitUntil(
+    caches.open(SHELL_CACHE)
+      .then((c) => Promise.all(SHELL.map((u) => fetch(u, { cache: 'reload' }).then((r) => { if (r.ok) return c.put(u, r); throw new Error('precache ' + u + ' ' + r.status); }))))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', (event) => {
@@ -58,7 +64,7 @@ async function cacheFirst(req, cacheName) {
 async function networkFirst(req, cacheName) {
   const cache = await caches.open(cacheName);
   try {
-    const res = await fetch(req);
+    const res = await fetch(req, { cache: 'no-cache' });
     if (res.ok) cache.put(req, res.clone());
     return res;
   } catch (_) {

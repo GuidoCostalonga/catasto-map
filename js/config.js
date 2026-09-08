@@ -15,7 +15,7 @@ const CATASTO_WORKER = 'https://catasto-map-proxy.guidocostalonga.workers.dev';
 
 window.CATASTO_CONFIG = {
   APP_NAME: 'CATASTO MAP',
-  VERSION: '1.0.1',
+  VERSION: '1.0.2',
 
   // null = automatico (true su localhost/127.0.0.1). In modalità sviluppo si attivano checkServices() e i dati demo.
   DEV_MODE: null,
