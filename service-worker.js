@@ -2,7 +2,7 @@
  * service-worker.js — PWA: cache dell'app shell, rete per API/servizi OGC, cache limitata delle tile di base.
  * Aggiornare CACHE_VERSION a ogni rilascio per invalidare le risorse statiche.
  */
-const CACHE_VERSION = 'catasto-map-v1.0.3';
+const CACHE_VERSION = 'catasto-map-v1.0.4';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const TILE_CACHE = `${CACHE_VERSION}-tiles`;
 const TILE_MAX_ENTRIES = 400;

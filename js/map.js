@@ -513,7 +513,11 @@ export class MapController extends EventTarget {
   /* ---------------- Snapshot per stampa/PDF ---------------- */
   snapshot() {
     return new Promise((resolve, reject) => {
-      this.map.once('rendercomplete', () => {
+      let done = false;
+      const compose = () => {
+        if (done) return;
+        done = true;
+        clearTimeout(fallback);
         try {
           const size = this.map.getSize();
           const canvas = document.createElement('canvas');
@@ -534,7 +538,10 @@ export class MapController extends EventTarget {
           ctx.globalAlpha = 1;
           resolve(canvas.toDataURL('image/png'));
         } catch (err) { reject(err); }
-      });
+      };
+      // se qualche tile non arriva mai, dopo 6 s si esporta comunque ciò che è disegnato
+      const fallback = setTimeout(compose, 6000);
+      this.map.once('rendercomplete', compose);
       this.map.renderSync();
     });
   }
