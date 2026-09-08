@@ -541,7 +541,7 @@ export class MapController extends EventTarget {
       // Si cattura subito ciò che è già disegnato a schermo: aspettare il caricamento di tutte le tile
       // (evento rendercomplete) poteva richiedere decine di secondi con il server AdE lento.
       this.map.renderSync();
-      requestAnimationFrame(compose);
+      setTimeout(compose, 0); // non requestAnimationFrame: in una scheda in secondo piano non verrebbe mai eseguito
     });
   }
 
