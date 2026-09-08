@@ -1,0 +1,23 @@
+{
+  "name": "CATASTO MAP – Foglio e particella su mappa",
+  "short_name": "Catasto Map",
+  "description": "WebGIS per individuare foglio e particella catastale su mappa con la cartografia ufficiale dell'Agenzia delle Entrate.",
+  "lang": "it",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f3f4f6",
+  "theme_color": "#0f4c81",
+  "categories": ["utilities", "productivity", "navigation"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "Punta e scopri", "url": "./?mode=punta", "description": "Leggi foglio e particella passando il mouse sul territorio" },
+    { "name": "Ricerca catastale", "url": "./?tab=ricerca", "description": "Trova una particella da Comune, foglio e numero" }
+  ]
+}

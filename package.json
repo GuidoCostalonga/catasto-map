@@ -1,0 +1,27 @@
+{
+  "name": "catasto-map",
+  "version": "1.0.0",
+  "description": "WebGIS per individuare foglio e particella catastale su mappa (cartografia ufficiale Agenzia delle Entrate) con backend sicuro per visure autorizzate.",
+  "type": "module",
+  "private": true,
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node --watch server/server.js",
+    "icons": "node tools/make-icons.js",
+    "hash-password": "node tools/hash-password.js",
+    "check": "node --check server/server.js && node --check js/catasto-core.js"
+  },
+  "engines": {
+    "node": ">=18.17"
+  },
+  "dependencies": {
+    "compression": "^1.7.5",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0"
+  },
+  "license": "MIT"
+}

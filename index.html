@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="CATASTO MAP – WebGIS per individuare foglio e particella catastale su mappa (cartografia ufficiale Agenzia delle Entrate).">
+  <meta name="theme-color" content="#0f4c81">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Catasto Map">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>CATASTO MAP</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="vendor/ol/ol.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app" class="app right-closed" data-mode="navigate">
+
+  <!-- ============ BARRA SUPERIORE ============ -->
+  <header class="topbar">
+    <button id="btn-menu" class="icon-btn only-mobile" aria-label="Apri pannello ricerca" title="Menu">☰</button>
+    <div class="brand" title="CATASTO MAP">
+      <svg class="brand-logo" viewBox="0 0 32 32" aria-hidden="true"><rect x="2" y="2" width="28" height="28" rx="6" fill="#0f4c81"/><path d="M8 8h16v16H8z" fill="none" stroke="#fff" stroke-width="1.5"/><path d="M8 14h16M8 20h16M14 8v16M20 8v16" stroke="#fff" stroke-width="1"/><path d="M14 14h6v6h-6z" fill="#ff6d00"/></svg>
+      <span class="brand-name">CATASTO MAP</span>
+      <span class="brand-badge" id="mode-badge" title="Profilo corrente">PUBBLICO</span>
+    </div>
+
+    <form id="search-form" class="search" role="search" autocomplete="off">
+      <input id="search-input" type="search" enterkeyhint="search" spellcheck="false"
+             placeholder="Cerca indirizzo… oppure «Roveredo in Piano foglio 12 particella 428»" aria-label="Cerca indirizzo o dati catastali">
+      <button type="submit" class="search-btn" aria-label="Cerca">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M15.5 15.5L21 21" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+      <ul id="search-suggestions" class="suggestions" role="listbox" hidden></ul>
+    </form>
+
+    <div class="topbar-actions">
+      <a id="tasto-home" class="icon-btn" href="/" title="Torna alla home di costalonga.org" aria-label="Home" hidden>⌂</a>
+      <button id="btn-punta" class="btn btn-accent" title="Modalità Punta e scopri: passa il mouse sul territorio e leggi foglio e particella" aria-pressed="false">
+        <span class="emoji">🎯</span><span class="label">PUNTA E SCOPRI</span>
+      </button>
+      <button id="btn-admin" class="icon-btn" title="Servizi, profilo e accesso operatore" aria-label="Servizi e accesso">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 .1-1 7.6 7.6 0 0 0-.1-1l2.1-1.6a.5.5 0 0 0 .1-.7l-2-3.4a.5.5 0 0 0-.6-.2l-2.5 1a7.3 7.3 0 0 0-1.7-1l-.4-2.6a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 0-.5.4l-.4 2.7a7.3 7.3 0 0 0-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.4a.5.5 0 0 0 .1.7L4.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6a.5.5 0 0 0-.1.7l2 3.4c.1.2.4.3.6.2l2.5-1a7.3 7.3 0 0 0 1.7 1l.4 2.6c0 .3.2.5.5.5h4c.3 0 .5-.2.5-.4l.4-2.7a7.3 7.3 0 0 0 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.4a.5.5 0 0 0-.1-.7L19.4 13zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ============ PANNELLO SINISTRO ============ -->
+  <aside id="panel-left" class="panel panel-left" aria-label="Ricerca, livelli e strumenti">
+    <div class="sheet-handle only-mobile" aria-hidden="true"></div>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" role="tab" data-tab="ricerca" aria-selected="true">Ricerca</button>
+      <button class="tab" role="tab" data-tab="livelli" aria-selected="false">Livelli</button>
+      <button class="tab" role="tab" data-tab="strumenti" aria-selected="false">Strumenti</button>
+    </nav>
+
+    <section class="tab-pane active" data-pane="ricerca">
+      <h2 class="section-title">Ricerca catastale</h2>
+      <p class="hint">Inserisci Comune, foglio e particella per trovare il mappale sulla cartografia ufficiale.</p>
+      <form id="catasto-form" class="form-grid" autocomplete="off">
+        <label class="field span-2"><span>Regione</span>
+          <select id="f-regione"><option value="">Tutte</option></select></label>
+        <label class="field span-2"><span>Provincia</span>
+          <select id="f-provincia"><option value="">Tutte</option></select></label>
+        <label class="field span-2"><span>Comune <b class="req">*</b></span>
+          <input id="f-comune" type="text" list="f-comune-list" placeholder="es. Roveredo in Piano" required>
+          <datalist id="f-comune-list"></datalist>
+          <small id="f-comune-info" class="field-info"></small></label>
+        <label class="field"><span>Sezione</span><input id="f-sezione" type="text" maxlength="2" placeholder="—"></label>
+        <label class="field"><span>Foglio <b class="req">*</b></span><input id="f-foglio" type="text" inputmode="numeric" placeholder="12" required></label>
+        <label class="field"><span>Particella <b class="req">*</b></span><input id="f-particella" type="text" placeholder="428" required></label>
+        <label class="field"><span>Subalterno</span><input id="f-sub" type="text" placeholder="—"></label>
+        <button type="submit" class="btn btn-primary btn-block span-2" id="btn-trova">TROVA SULLA MAPPA</button>
+      </form>
+      <div id="catasto-form-status" class="status" hidden></div>
+
+      <h2 class="section-title" id="history-title">Cronologia particelle</h2>
+      <ul id="history-list" class="history" aria-live="polite"></ul>
+      <button id="btn-history-clear" class="btn btn-ghost btn-sm">Svuota cronologia</button>
+    </section>
+
+    <section class="tab-pane" data-pane="livelli">
+      <h2 class="section-title">Base cartografica</h2>
+      <div id="basemap-list" class="radio-list"></div>
+
+      <h2 class="section-title">Cartografia catastale</h2>
+      <label class="switch"><input type="checkbox" id="chk-catasto" checked><span>Mostra cartografia catastale</span></label>
+      <div id="catasto-layer-list" class="check-list"></div>
+      <label class="range"><span>Opacità catasto</span><input type="range" id="catasto-opacity" min="0.2" max="1" step="0.05" value="1"></label>
+      <details class="legend"><summary>Legenda</summary><img id="legend-img" alt="Legenda cartografia catastale" loading="lazy"></details>
+
+      <h2 class="section-title">Altri livelli</h2>
+      <div id="extra-layer-list" class="check-list"></div>
+      <p class="hint">Numeri civici: inclusi nella base OpenStreetMap a zoom ≥ 18. Confini comunali: dal geocoder OSM per il Comune selezionato.</p>
+    </section>
+
+    <section class="tab-pane" data-pane="strumenti">
+      <h2 class="section-title">Strumenti</h2>
+      <div class="tool-grid">
+        <button class="tool" id="btn-gps"><span class="emoji">📍</span>Posizione GPS</button>
+        <button class="tool" id="btn-measure-line"><span class="emoji">📐</span>Misura distanza</button>
+        <button class="tool" id="btn-measure-area"><span class="emoji">⬡</span>Misura superficie</button>
+        <button class="tool" id="btn-print"><span class="emoji">🖨</span>Stampa mappa</button>
+        <button class="tool" id="btn-link"><span class="emoji">🔗</span>Copia link particella</button>
+        <button class="tool" id="btn-pdf"><span class="emoji">📄</span>Scheda PDF</button>
+        <button class="tool" id="btn-basemap"><span class="emoji">🗺</span>Cambia basemap</button>
+        <button class="tool" id="btn-point"><span class="emoji">📌</span>Aggiungi punto</button>
+        <button class="tool" id="btn-coords"><span class="emoji">🧭</span>Coordinate</button>
+        <button class="tool" id="btn-history"><span class="emoji">📋</span>Cronologia</button>
+        <button class="tool" id="btn-crosshair"><span class="emoji">⌖</span>Mirino centrale</button>
+        <button class="tool" id="btn-clear"><span class="emoji">🧹</span>Pulisci mappa</button>
+      </div>
+      <div id="tool-status" class="status" hidden></div>
+      <ul id="points-list" class="points"></ul>
+    </section>
+  </aside>
+
+  <!-- ============ MAPPA ============ -->
+  <main id="map-wrap" class="map-wrap">
+    <div id="map" class="map" tabindex="0" aria-label="Mappa"></div>
+
+    <div id="hover-tooltip" class="hover-tooltip" hidden></div>
+
+    <div id="crosshair" class="crosshair" hidden aria-hidden="true">
+      <div class="crosshair-ring"></div><div class="crosshair-h"></div><div class="crosshair-v"></div>
+    </div>
+    <div id="crosshair-card" class="crosshair-card" hidden>
+      <div id="crosshair-info" class="crosshair-info">Sposta la mappa sotto il mirino</div>
+      <button id="btn-crosshair-select" class="btn btn-primary btn-sm">SELEZIONA QUESTA PARTICELLA</button>
+    </div>
+
+    <div id="punta-hud" class="punta-hud" hidden>
+      <div class="punta-hud-title">PUNTA E SCOPRI</div>
+      <div id="punta-hud-body" class="punta-hud-body">Passa il mouse sul territorio…</div>
+    </div>
+
+    <div class="map-controls">
+      <button id="btn-zoom-in" class="map-ctl" title="Zoom avanti" aria-label="Zoom avanti">+</button>
+      <button id="btn-zoom-out" class="map-ctl" title="Zoom indietro" aria-label="Zoom indietro">−</button>
+      <button id="btn-locate-quick" class="map-ctl" title="La mia posizione" aria-label="La mia posizione">◎</button>
+    </div>
+
+    <div id="progress" class="progress" hidden role="status" aria-live="polite">
+      <div class="progress-bar"></div><span id="progress-text">Interrogazione in corso…</span>
+    </div>
+
+    <div class="map-footer">
+      <span id="coords-readout" class="coords" title="Coordinate del cursore (WGS84)">—</span>
+      <span id="zoom-readout" class="zoom"></span>
+      <span id="zoom-hint" class="zoom-hint" hidden>Zoomare maggiormente per interrogare il catasto</span>
+    </div>
+
+    <div id="minimap" class="minimap" title="Posizione rispetto al Comune"></div>
+  </main>
+
+  <!-- ============ PANNELLO DESTRO: DATI PARTICELLA ============ -->
+  <aside id="panel-right" class="panel panel-right" hidden aria-label="Dati particella">
+    <div class="sheet-handle only-mobile" aria-hidden="true"></div>
+    <header class="panel-header">
+      <h2>DATI PARTICELLA</h2>
+      <button id="btn-close-right" class="icon-btn" aria-label="Chiudi scheda">✕</button>
+    </header>
+    <div id="parcel-skeleton" class="skeleton" hidden>
+      <div class="sk sk-title"></div><div class="sk"></div><div class="sk"></div><div class="sk short"></div><div class="sk"></div>
+    </div>
+    <div id="parcel-content" class="panel-body">
+      <div id="address-block" class="block" hidden>
+        <h3>INDIRIZZO TROVATO</h3>
+        <div id="address-lines" class="address"></div>
+      </div>
+      <div class="block">
+        <h3>DATI CATASTALI</h3>
+        <div id="parcel-headline" class="headline"></div>
+        <dl id="parcel-kv" class="kv"></dl>
+      </div>
+      <div class="actions">
+        <button class="btn btn-sm" id="pa-copy">Copia dati catastali</button>
+        <button class="btn btn-sm" id="pa-copy-coords">Copia coordinate</button>
+        <button class="btn btn-sm" id="pa-gmaps">Apri su Google Maps</button>
+        <button class="btn btn-sm" id="pa-center">Centra particella</button>
+        <button class="btn btn-sm" id="pa-pdf">Scarica scheda PDF</button>
+        <button class="btn btn-sm btn-accent" id="pa-visura">Richiedi visura</button>
+      </div>
+      <div class="block" id="ownership-block">
+        <h3>VISURA / INTESTAZIONE CATASTALE</h3>
+        <p id="ownership-msg" class="ownership-msg"></p>
+        <form id="ownership-form" class="form-grid" hidden>
+          <label class="field span-2"><span>Subalterno (facoltativo)</span><input id="o-sub" type="text" placeholder="—"></label>
+          <label class="field span-2"><span>Motivo della consultazione <b class="req">*</b></span>
+            <textarea id="o-motivo" rows="2" required minlength="5" placeholder="es. istruttoria pratica edilizia n. …"></textarea></label>
+          <button type="submit" class="btn btn-primary span-2">Consulta intestatari</button>
+        </form>
+        <div id="ownership-result" class="ownership-result"></div>
+      </div>
+      <p class="source-note">Fonte cartografica: Agenzia delle Entrate – Geoportale Cartografico Catastale (CC BY 4.0). Dati indicativi, privi di valore legale.</p>
+    </div>
+  </aside>
+
+  <!-- ============ MODALE SERVIZI / ACCESSO ============ -->
+  <div id="admin-modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="admin-title">
+    <div class="modal-card">
+      <header class="modal-header"><h2 id="admin-title">Servizi e profilo</h2><button class="icon-btn" id="btn-admin-close" aria-label="Chiudi">✕</button></header>
+      <div class="modal-body">
+        <section>
+          <h3>SERVIZI</h3>
+          <ul id="services-list" class="services">
+            <li><span class="dot dot-grey"></span> Verifica non ancora eseguita</li>
+          </ul>
+          <button id="btn-check-services" class="btn btn-sm">Verifica servizi</button>
+        </section>
+        <section id="auth-section">
+          <h3>PROFILO</h3>
+          <div id="auth-info" class="auth-info">Profilo PUBBLICO: navigazione, ricerca, foglio/particella, coordinate, stampa.</div>
+          <form id="login-form" class="form-grid">
+            <label class="field span-2"><span>Utente</span><input id="login-user" type="text" autocomplete="username" required></label>
+            <label class="field span-2"><span>Password</span><input id="login-pass" type="password" autocomplete="current-password" required></label>
+            <button type="submit" class="btn btn-primary span-2">Accedi come operatore</button>
+          </form>
+          <button id="btn-logout" class="btn btn-sm" hidden>Esci</button>
+          <p class="hint">L'accesso operatore abilita la richiesta di visura solo se il backend è collegato a un servizio catastale autorizzato. Nessuna credenziale dell'Agenzia delle Entrate è gestita nel browser.</p>
+        </section>
+        <section id="dev-section" hidden>
+          <h3>SVILUPPO</h3>
+          <p class="hint">Modalità sviluppo attiva (localhost). Il provider MockOwnershipProvider mostra dati chiaramente fittizi.</p>
+          <div id="dev-stats" class="hint"></div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <div id="print-area" class="print-area" hidden></div>
+
+  <!-- ============ BARRA MOBILE ============ -->
+  <nav class="mobile-bar only-mobile" aria-label="Navigazione mobile">
+    <button data-open="ricerca">🔎<span>Ricerca</span></button>
+    <button data-open="livelli">🗂<span>Livelli</span></button>
+    <button data-open="strumenti">🧰<span>Strumenti</span></button>
+    <button id="mb-crosshair">⌖<span>Mirino</span></button>
+    <button id="mb-scheda">📄<span>Scheda</span></button>
+  </nav>
+</div>
+
+<script src="js/config.js"></script>
+<script src="vendor/ol/ol.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
